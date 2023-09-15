@@ -1,5 +1,5 @@
 # scribble
 
-clone repo
-npm run dev 
+clone repo \n
+npm run dev \n
 open http://localhost:3000
