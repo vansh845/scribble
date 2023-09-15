@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vrible</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <canvas id="myCanvas"></canvas>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        const myCanvas = document.getElementById('myCanvas')
+        myCanvas.width = window.innerWidth
+        myCanvas.height = window.innerHeight
+
+        const ctx = myCanvas.getContext('2d')
+        ctx.imageSmoothingEnabled = false;
+        
+        socket.on('start',(msg)=>{
+            ctx.closePath()
+            ctx.beginPath()
+        })
+
+        socket.on('pixel', (pxl) => {
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round'
+            ctx.strokeStyle = 'black'
+
+            const x = pxl[0];
+            const y = pxl[1];
+    
+            ctx.lineTo(x,y)
+            ctx.stroke()
+        })
+
+        socket.on('end',()=>{
+            ctx.closePath();
+        })
+
+        let drawing = false;
+
+        const draw = (event) => {
+            if (!drawing) return;
+
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = 'black';
+
+            const x = event.clientX - myCanvas.getBoundingClientRect().left;
+            const y = event.clientY - myCanvas.getBoundingClientRect().top;
+            socket.emit('pixel', [x, y]);
+
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+
+        }
+        myCanvas.addEventListener('mousedown', () => {
+            const x = event.clientX - myCanvas.getBoundingClientRect().left;
+            const y = event.clientY - myCanvas.getBoundingClientRect().top;
+            drawing = true;
+            ctx.beginPath()
+            socket.emit('start',[x,y]);
+
+        })
+
+        myCanvas.addEventListener('mousemove', draw);
+
+        myCanvas.addEventListener('mouseup', () => {
+            drawing = false;
+            ctx.closePath();
+            console.log(drawing)
+            socket.emit('end')
+        })
+
+
+    </script>
+    <!-- <script src="script.js"></script> -->
+
+</body>
+
+</html>
